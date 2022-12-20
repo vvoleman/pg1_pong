@@ -1,8 +1,20 @@
-import {Camera, GridHelper, OrthographicCamera, Renderer, Scene, WebGLRenderer} from "three";
+import {
+    Camera,
+    DirectionalLight,
+    GridHelper,
+    OrthographicCamera,
+    PointLight,
+    Renderer,
+    Scene,
+    WebGLRenderer
+} from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
 import {TrackballControls} from "three/examples/jsm/controls/TrackballControls";
 import {GUI} from "dat.gui";
 import AbstractObject from "@/objects/AbstractObject";
+import Collision from "@/managers/Collision";
+import Scoreboard from "@/game/Scoreboard";
+import SoundPlayer from "@/game/SoundPlayer";
 
 export default class Screen {
 
@@ -14,11 +26,23 @@ export default class Screen {
     private controls: TrackballControls
     private stats: Stats
 
+    private play: boolean = false
+
+    private collision: Collision = Collision.getInstance()
+
     private updatableObjects: AbstractObject[] = []
 
     constructor() {
         this.setupScene()
         this.setupPlugins()
+    }
+
+    public setPlay(play: boolean) {
+        this.play = play
+    }
+
+    public isPlaying(): boolean {
+        return this.play
     }
 
     public addUpdatableObject(object: AbstractObject) {
@@ -45,6 +69,8 @@ export default class Screen {
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
+        camera.add(SoundPlayer.getInstance().getListener())
+
         this.scene = scene
         this.renderer = renderer
         this.camera = camera
@@ -55,23 +81,14 @@ export default class Screen {
         document.body.appendChild(this.stats.dom);
 
         this.gui = new GUI()
-        const folder = this.gui.addFolder('Camera Position')
-        folder.add(this.camera.position, 'x', -100, 100)
-        folder.add(this.camera.position, 'y', -100, 100)
-        folder.add(this.camera.position, 'z', -100, 100)
+        const folder = this.gui.addFolder('Camera')
+        folder.add(this.camera.rotation, 'x', -2, 2)
+        folder.add(this.camera.rotation, 'y', -2, 2)
+        folder.add(this.camera.rotation, 'z', -2, 2)
         folder.open()
-
-        const folderRotation = this.gui.addFolder('Camera Rotation')
-        folderRotation.add(this.camera.rotation, 'x', -100, 100)
-        folderRotation.add(this.camera.rotation, 'y', -100, 100)
-        folderRotation.add(this.camera.rotation, 'z', -100, 100)
-        folderRotation.open()
 
         const size = 100;
         const divisions = 100;
-
-        const gridHelper = new GridHelper( size, divisions );
-        this.scene.add( gridHelper );
     }
 
     public getWindowSize(): { width: number, height: number } {
@@ -85,8 +102,16 @@ export default class Screen {
         this.stats.begin()
         requestAnimationFrame(() => this.animate());
 
-        for (const updatableObject of this.updatableObjects) {
-            updatableObject.update()
+        if (this.play) {
+            for (const updatableObject of this.updatableObjects) {
+                updatableObject.update()
+            }
+            this.collision.update()
+            const scoreboard = Scoreboard.getInstance()
+            if (scoreboard) {
+                scoreboard.update()
+            }
+
         }
 
         this.renderer.render(this.scene, this.camera);

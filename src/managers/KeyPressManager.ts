@@ -29,7 +29,6 @@ export class KeyPressManager {
         for (const event of events) {
             document.addEventListener(event, (e: KeyboardEvent) => {
                 const key = e.key
-                console.log(key)
                 if (this.keyEvents[event][key] === undefined) {
                     return
                 }

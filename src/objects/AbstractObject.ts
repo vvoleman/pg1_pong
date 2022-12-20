@@ -62,5 +62,15 @@ export default abstract class AbstractObject extends Observable implements IObje
         return 1
     }
 
+    protected getDistanceTo(other: IObject): number {
+        const pos = this.getPosition()
+        const otherPos = other.getPosition()
+        return this.getDistanceBetweenPos(pos, otherPos)
+    }
+
+    protected getDistanceBetweenPos(pos1: PositionVector, pos2: PositionVector): number {
+        return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2))
+    }
+
 }
 

@@ -1,6 +1,8 @@
 import Sphere from "@/objects/Sphere";
-import Cube from "@/objects/Cube";
 import IObject from "@/objects/IObject";
+import {BoxGeometry, BoxHelper, Mesh, MeshBasicMaterial, Object3D} from "three";
+import Debug from "@/managers/Debug";
+import {KeyEvent, KeyPressManager} from "@/managers/KeyPressManager";
 
 export enum Sides {
     LEFT = 'left',
@@ -19,17 +21,46 @@ export default class Borders {
     private constructor() {
     }
 
+    public getObject(): BoxHelper {
+        const box = new BoxGeometry(this.width, this.height, 1)
+        return new BoxHelper(new Mesh(box, new MeshBasicMaterial({color: "red"})))
+    }
+
     public getTouchedBorderBall(obj: Sphere): Sides | null {
         const pos = obj.getPosition()
-        const vel = obj.getVelocity()
+        const radius = obj.getRadius()
 
-        if (pos.x + vel.x < -this.width / 2) {
+        // center of the circle
+        const m = pos.x
+        const n = pos.y
+
+        //formula for (x-m)^2 + (y-n)^2 - r^2
+        const fn = (x: number, y: number) => {
+            return (x-m)**2 + (y-n)**2 - radius**2
+        }
+
+        const left = fn(-this.width/2, n)
+        const right = fn(this.width/2, n)
+        const top = fn(m, this.height/2)
+        const bottom = fn(m, -this.height/2)
+
+        // Debug.getInstance().debug('Borders', {
+        //     radius: radius,
+        //     m: m,
+        //     n: n,
+        //     left: left,
+        //     right: right,
+        //     top: top,
+        //     bottom: bottom
+        // })
+
+        if (left <= 0) {
             return Sides.LEFT
-        } else if (pos.x + vel.x > this.width / 2) {
+        } else if (right <= 0) {
             return Sides.RIGHT
-        } else if (pos.y + vel.y < -this.height / 2) {
+        } else if (bottom <= 0) {
             return Sides.BOTTOM
-        } else if (pos.y + vel.y > this.height / 2) {
+        } else if (top <= 0) {
             return Sides.TOP
         }
 
@@ -39,14 +70,22 @@ export default class Borders {
     public getTouchedBorder(obj: IObject): Sides | null {
         const pos = obj.getPosition()
         const vel = obj.getVelocity()
+        const geometry = obj.getObject().geometry as BoxGeometry
 
-        if (pos.x + vel.x < -this.width / 2) {
+        const width = geometry.parameters.width
+        const height = geometry.parameters.height
+
+        const x = pos.x + width/2
+        const y = pos.y + height/2
+
+
+        if (x + vel.x < -this.width / 2) {
             return Sides.LEFT
-        } else if (pos.x + vel.x > this.width / 2) {
+        } else if (x + width + vel.x > this.width / 2) {
             return Sides.RIGHT
-        } else if (pos.y + vel.y < -this.height / 2) {
+        } else if (y - height + vel.y < -this.height / 2) {
             return Sides.BOTTOM
-        } else if (pos.y + vel.y > this.height / 2) {
+        } else if (y + vel.y > this.height / 2) {
             return Sides.TOP
         }
 
