@@ -15,8 +15,8 @@ export default class Borders {
 
     private static _instance: Borders
 
-    public width: number = 55
-    public height: number = 25
+    public width: number = 50
+    public height: number = 20
 
     private constructor() {
     }
