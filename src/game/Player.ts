@@ -1,6 +1,9 @@
 import IObject from "@/objects/IObject";
 import Observable from "@/objects/Observable";
 import {KeyEvent, KeyPressManager} from "@/managers/KeyPressManager";
+import {Side} from "three";
+import {Sides} from "@/game/Borders";
+import Cube from "@/objects/Cube";
 
 export enum PlayerControl {
     UP = "up",
@@ -12,25 +15,30 @@ export enum PlayerEvent {
     VOTE_FOR_PAUSE = "voteForPause",
 }
 
+export enum PlayerSide {
+    LEFT = "left",
+    RIGHT = "right",
+}
+
 export type ControlSettings = {
     [key in PlayerControl]: string;
 };
 
 export default class Player extends Observable {
 
-    private object: IObject
+    private object: Cube
 
     private controls: ControlSettings
 
     private score: number
 
-    private name: string
-
     private isPaused: boolean
 
     private speed: number
 
-    constructor(object: IObject, controls: ControlSettings, name: string) {
+    private side: PlayerSide
+
+    constructor(object: Cube, controls: ControlSettings, side: PlayerSide) {
         super()
 
         this.score = 0
@@ -38,7 +46,7 @@ export default class Player extends Observable {
 
         this.controls = controls
         this.object = object
-        this.name = name
+        this.side = side
         this.speed = 0.1
 
         this.setupControls()
@@ -65,12 +73,22 @@ export default class Player extends Observable {
         return this.score
     }
 
-    public getName(): string {
-        return this.name
+    public getSide(): PlayerSide {
+        return this.side
     }
 
-    public getObject(): IObject {
+    public getObject(): Cube {
         return this.object
+    }
+
+    public moveUp(start: boolean = true): void {
+        const velocity = this.object.getVelocity()
+        velocity.y = start ? this.speed : 0
+    }
+
+    public moveDown(start: boolean = true): void {
+        const velocity = this.object.getVelocity()
+        velocity.y = start ? - this.speed : 0
     }
 
 

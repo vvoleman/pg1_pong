@@ -1,19 +1,19 @@
 import AbstractColorObject from "@/objects/AbstractColorObject";
-import {BoxGeometry, Mesh, SphereGeometry} from "three";
+import {BoxGeometry, Mesh, SphereGeometry, Sphere as SphereTree} from "three";
 import Borders, {Sides} from "@/game/Borders";
 import Cube from "@/objects/Cube";
-import Debug from "@/managers/Debug";
+import PositionVector from "@/containers/PositionVector";
+import AbstractObject from "@/objects/AbstractObject";
 
 export default class Sphere extends AbstractColorObject {
 
-    private radius: number = 1
+    //private radius: number = 150
 
     public getRadius(): number {
-        return this.radius
+        return 1
     }
 
     public setRadius(radius: number): Sphere {
-        this.radius = radius
         this.object.geometry = new SphereGeometry(radius, 32, 32)
         return this
     }
@@ -24,33 +24,35 @@ export default class Sphere extends AbstractColorObject {
         const realDistance = this.getDistanceTo(cube)
 
         const minDistance = this.getRadius() + cubeGeometry.parameters.width / 2
-        const maxDistance = this.getRadius() + this.getDistanceBetweenPos(cubePos, {
-            x: cubePos.x + cubeGeometry.parameters.width / 2,
-            y: cubePos.y + cubeGeometry.parameters.height / 2,
-            z: cubePos.z
-        })
+        const adjustedDistance = new PositionVector(
+            cubePos.x + cubeGeometry.parameters.width / 2,
+            cubePos.y + cubeGeometry.parameters.height / 2,
+            cubePos.z
+        )
+
+        const maxDistance = this.getRadius() + AbstractObject.getDistanceBetweenPos(cubePos, adjustedDistance)
 
         const distance = Math.min(Math.max(realDistance, minDistance), maxDistance)
 
 
         const maxSpeed = 1.5
         const minSpeed = 0.9
-        return (distance - minDistance) / (maxDistance - minDistance) * (maxSpeed - minSpeed) + minSpeed
+        return Math.round(((distance - minDistance) / (maxDistance - minDistance) * (maxSpeed - minSpeed) + minSpeed) * 100) / 100
+    }
+
+    getSphereObject(): SphereTree {
+        return new SphereTree(this.getPosition(), this.getRadius())
     }
 
     protected setupObject(): Mesh {
-        const geometry = new SphereGeometry(1, 32, 32);
+        const geometry = new SphereGeometry(this.getRadius(), 32, 32);
         const material = this.material
         return new Mesh(geometry, material)
     }
 
     update(): void {
-        Debug.getInstance().debug("Sphere", {
-            speedX: this.getVelocity().x,
-            speedY: this.getVelocity().y
-        })
-
-        const touched = Borders.getInstance().getTouchedBorderBall(this)
+        // Get position one frame ahead
+        const touched = Borders.getInstance().getTouchedSide(this)
 
         const vel = this.getVelocity()
         if (touched) {
@@ -63,13 +65,18 @@ export default class Sphere extends AbstractColorObject {
                 vel.x = -vel.x
             }
         }
-
         const pos = this.getPosition()
-        const newPos = {
-            x: pos.x + vel.x,
-            y: pos.y + vel.y,
-            z: pos.z + vel.z
-        }
+
+        const newPos = new PositionVector(pos.x + vel.x,
+            pos.y + vel.y,
+            pos.z + vel.z)
+
+
+        // Calculate slope between current and next position
+        // Debug.getInstance().debug('Slope', {
+        //     slopeReal: slope,
+        //     slopeCalculated: vel.y / vel.x,
+        // })
 
         this.setPosition(newPos)
         this.object.position.set(newPos.x, newPos.y, newPos.z)

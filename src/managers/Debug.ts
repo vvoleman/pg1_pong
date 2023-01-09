@@ -27,7 +27,7 @@ export default class Debug {
         return !!document.getElementById(id)
     }
 
-    public debug(id: string, data: Array<DebugRow>): void {
+    public debug(id: string, data: DebugRow): void {
         const table = this.createDebugTable(id, data)
         let element = document.getElementById(id)
         if (!element) {
@@ -39,7 +39,7 @@ export default class Debug {
         element.innerHTML = table
     }
 
-    private createDebugTable(id: string, data: Array<DebugRow>): string {
+    private createDebugTable(id: string, data: DebugRow): string {
         let div = `<div><b>${id}<br></b>`
         for (let key in data) {
             div += `${key}: ${data[key]}<br>`

@@ -1,6 +1,7 @@
 import {BoxGeometry, Mesh} from "three";
 import AbstractColorObject from "@/objects/AbstractColorObject";
 import Borders, {Sides} from "@/game/Borders";
+import PositionVector from "@/containers/PositionVector";
 
 export interface Size {
     width: number,
@@ -38,19 +39,14 @@ export default class Cube extends AbstractColorObject{
         const vel = this.getVelocity()
 
         this.setVelocity(vel)
-
-        const newPos = {
-            x: pos.x + vel.x,
-            y: pos.y + vel.y,
-            z: pos.z + vel.z
-        }
+        const newPos = new PositionVector(pos.x + vel.x, pos.y + vel.y, pos.z + vel.z)
 
         const objWidth = (this.object.geometry as BoxGeometry).parameters.width
         const objHeight = (this.object.geometry as BoxGeometry).parameters.height
 
         // Does the object touch the borders?
         if (this.borders !== null) {
-            const touchedBorder = this.borders.getTouchedBorder(this)
+            const touchedBorder = this.borders.getTouchedSide(this)
             if (touchedBorder !== null) {
                 console.log(touchedBorder)
                 switch (touchedBorder) {

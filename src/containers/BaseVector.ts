@@ -1,4 +1,4 @@
-export default interface XYZVector {
+export default interface BaseVector{
 
     x: number
     y: number

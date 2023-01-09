@@ -1,5 +1,5 @@
-import XYZVector from "@/containers/XYZVector";
+import {Vector3} from "three";
 
-export default interface VelocityVector extends XYZVector {
+export default class VelocityVector extends Vector3 {
 
 }

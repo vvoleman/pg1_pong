@@ -1,9 +1,6 @@
 import {
     Camera,
-    DirectionalLight,
-    GridHelper,
     OrthographicCamera,
-    PointLight,
     Renderer,
     Scene,
     WebGLRenderer
@@ -11,10 +8,10 @@ import {
 import Stats from "three/examples/jsm/libs/stats.module";
 import {TrackballControls} from "three/examples/jsm/controls/TrackballControls";
 import {GUI} from "dat.gui";
-import AbstractObject from "@/objects/AbstractObject";
 import Collision from "@/managers/Collision";
 import Scoreboard from "@/game/Scoreboard";
 import SoundPlayer from "@/game/SoundPlayer";
+import IUpdatable from "@/objects/IUpdatable";
 
 export default class Screen {
 
@@ -30,7 +27,7 @@ export default class Screen {
 
     private collision: Collision = Collision.getInstance()
 
-    private updatableObjects: AbstractObject[] = []
+    private updatableObjects: IUpdatable[] = []
 
     constructor() {
         this.setupScene()
@@ -45,7 +42,7 @@ export default class Screen {
         return this.play
     }
 
-    public addUpdatableObject(object: AbstractObject) {
+    public addUpdatableObject(object: IUpdatable) {
         this.scene.add(object.getObject())
         this.updatableObjects.push(object)
     }
@@ -80,15 +77,12 @@ export default class Screen {
         this.stats = Stats();
         document.body.appendChild(this.stats.dom);
 
-        this.gui = new GUI()
-        const folder = this.gui.addFolder('Camera')
-        folder.add(this.camera.rotation, 'x', -2, 2)
-        folder.add(this.camera.rotation, 'y', -2, 2)
-        folder.add(this.camera.rotation, 'z', -2, 2)
-        folder.open()
-
-        const size = 100;
-        const divisions = 100;
+        // this.gui = new GUI()
+        // const folder = this.gui.addFolder('Camera')
+        // folder.add(this.camera.rotation, 'x', -2, 2)
+        // folder.add(this.camera.rotation, 'y', -2, 2)
+        // folder.add(this.camera.rotation, 'z', -2, 2)
+        // folder.open()
     }
 
     public getWindowSize(): { width: number, height: number } {

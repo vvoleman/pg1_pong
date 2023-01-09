@@ -1,8 +1,8 @@
 import Sphere from "@/objects/Sphere";
 import IObject from "@/objects/IObject";
-import {BoxGeometry, BoxHelper, Mesh, MeshBasicMaterial, Object3D} from "three";
-import Debug from "@/managers/Debug";
-import {KeyEvent, KeyPressManager} from "@/managers/KeyPressManager";
+import {Box3, BoxGeometry, BoxHelper, Mesh, MeshBasicMaterial,} from "three";
+import AbstractObject from "@/objects/AbstractObject";
+import PositionVector from "@/containers/PositionVector";
 
 export enum Sides {
     LEFT = 'left',
@@ -17,79 +17,65 @@ export default class Borders {
 
     public width: number = 50
     public height: number = 20
+    private depth: number = 1
 
     private constructor() {
     }
 
+    public setDept(depth: number) {
+        this.depth = depth
+    }
+
     public getObject(): BoxHelper {
-        const box = new BoxGeometry(this.width, this.height, 1)
+        const box = new BoxGeometry(this.width, this.height, this.depth)
         return new BoxHelper(new Mesh(box, new MeshBasicMaterial({color: "red"})))
     }
 
-    public getTouchedBorderBall(obj: Sphere): Sides | null {
-        const pos = obj.getPosition()
-        const radius = obj.getRadius()
+    public getTouchedSide(obj: IObject): Sides | null {
+        const borderBox = new Box3().setFromObject(this.getObject())
+        const objBox = new Box3().setFromObject(obj.getObject())
+        const isInside = borderBox.containsBox(objBox)
 
-        // center of the circle
-        const m = pos.x
-        const n = pos.y
-
-        //formula for (x-m)^2 + (y-n)^2 - r^2
-        const fn = (x: number, y: number) => {
-            return (x-m)**2 + (y-n)**2 - radius**2
+        // All points of sphere in box
+        if (isInside) {
+            return null
         }
 
-        const left = fn(-this.width/2, n)
-        const right = fn(this.width/2, n)
-        const top = fn(m, this.height/2)
-        const bottom = fn(m, -this.height/2)
+        const spherePos = obj.getPosition()
 
-        // Debug.getInstance().debug('Borders', {
-        //     radius: radius,
-        //     m: m,
-        //     n: n,
-        //     left: left,
-        //     right: right,
-        //     top: top,
-        //     bottom: bottom
-        // })
-
-        if (left <= 0) {
-            return Sides.LEFT
-        } else if (right <= 0) {
-            return Sides.RIGHT
-        } else if (bottom <= 0) {
-            return Sides.BOTTOM
-        } else if (top <= 0) {
-            return Sides.TOP
-        }
-
-        return null
+        return Borders.getClosesBorder(spherePos)
     }
 
-    public getTouchedBorder(obj: IObject): Sides | null {
-        const pos = obj.getPosition()
-        const vel = obj.getVelocity()
-        const geometry = obj.getObject().geometry as BoxGeometry
+    public static getSidePosition(side: Sides, pos: PositionVector): PositionVector {
+        const instance = Borders.getInstance()
+        switch (side) {
+            case Sides.LEFT:
+                return new PositionVector(-instance.width / 2, pos.y, 0)
+            case Sides.RIGHT:
+                return new PositionVector(instance.width / 2, pos.y, 0)
+            case Sides.TOP:
+                return new PositionVector(pos.x, instance.height / 2, 0)
+            case Sides.BOTTOM:
+                return new PositionVector(pos.x, -instance.height / 2, 0)
+        }
+    }
 
-        const width = geometry.parameters.width
-        const height = geometry.parameters.height
+    public static getClosesBorder(pos: PositionVector): Sides {
+        const left = AbstractObject.getDistanceBetweenPos(pos, this.getSidePosition(Sides.LEFT, pos))
+        const right = AbstractObject.getDistanceBetweenPos(pos, this.getSidePosition(Sides.RIGHT, pos))
+        const top = AbstractObject.getDistanceBetweenPos(pos, this.getSidePosition(Sides.TOP, pos))
+        const bottom = AbstractObject.getDistanceBetweenPos(pos, this.getSidePosition(Sides.BOTTOM, pos))
 
-        const x = pos.x + width/2
-        const y = pos.y + height/2
-
-
-        if (x + vel.x < -this.width / 2) {
-            return Sides.LEFT
-        } else if (x + width + vel.x > this.width / 2) {
-            return Sides.RIGHT
-        } else if (y - height + vel.y < -this.height / 2) {
-            return Sides.BOTTOM
-        } else if (y + vel.y > this.height / 2) {
-            return Sides.TOP
+        const sides = {
+            [left]: Sides.LEFT,
+            [right]: Sides.RIGHT,
+            [top]: Sides.TOP,
+            [bottom]: Sides.BOTTOM
         }
 
-        return null
+        const min = Math.min(left, right, top, bottom)
+
+        return sides[min]
     }
 
     public static getInstance(): Borders {

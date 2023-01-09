@@ -3,22 +3,15 @@ import {Mesh, MeshBasicMaterial} from "three";
 import VelocityVector from "@/containers/VelocityVector";
 import PositionVector from "@/containers/PositionVector";
 import Observable from "@/objects/Observable";
+import IUpdatable from "@/objects/IUpdatable";
 
-export default abstract class AbstractObject extends Observable implements IObject {
+export default abstract class AbstractObject extends Observable implements IObject, IUpdatable {
 
     protected object: Mesh;
     protected material: MeshBasicMaterial
-    protected velocity: VelocityVector = {
-        x: 0,
-        y: 0,
-        z: 0
-    }
+    protected velocity: VelocityVector = new VelocityVector(0, 0, 0)
 
-    protected position: PositionVector = {
-        x: 0,
-        y: 0,
-        z: 0
-    }
+    protected position: PositionVector = new PositionVector(0, 0, 0)
 
     protected constructor(material: MeshBasicMaterial) {
         super();
@@ -65,10 +58,10 @@ export default abstract class AbstractObject extends Observable implements IObje
     protected getDistanceTo(other: IObject): number {
         const pos = this.getPosition()
         const otherPos = other.getPosition()
-        return this.getDistanceBetweenPos(pos, otherPos)
+        return AbstractObject.getDistanceBetweenPos(pos, otherPos)
     }
 
-    protected getDistanceBetweenPos(pos1: PositionVector, pos2: PositionVector): number {
+    public static getDistanceBetweenPos(pos1: PositionVector, pos2: PositionVector): number {
         return Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.y - pos2.y, 2))
     }
 
