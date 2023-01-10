@@ -1,6 +1,6 @@
-import IObject from "@/objects/IObject";
+import IObject from "@/objects/base/IObject";
 import {Box3, BoxGeometry, BoxHelper, Mesh, MeshBasicMaterial,} from "three";
-import AbstractObject from "@/objects/AbstractObject";
+import AbstractObject from "@/objects/base/AbstractObject";
 import PositionVector from "@/containers/PositionVector";
 
 export enum Sides {

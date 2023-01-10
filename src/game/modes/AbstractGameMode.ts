@@ -1,10 +1,10 @@
 import IControlList from "@/game/controls/IControl";
 import {Sides} from "@/game/Borders";
-import _Game from "@/game/_Game";
+import game from "@/game/Game";
 
 export default abstract class AbstractGameMode {
 
-    protected game!: _Game;
+    protected game!: game;
 
     public abstract onBallBorderCollision(side: Sides): void;
 
@@ -12,7 +12,7 @@ export default abstract class AbstractGameMode {
 
     public abstract getDescription(): string;
 
-    public onSetup(game: _Game ): void {
+    public onSetup(game: game ): void {
         this.game = game;
     }
 

@@ -1,228 +1,128 @@
-import Player, {PlayerEvent, PlayerSide} from "@/game/Player";
-import Cube from "@/objects/Cube";
+import AbstractGameMode from "@/game/modes/AbstractGameMode";
+import IControlList, {setupControl} from "@/game/controls/IControl";
+import gameControls from "@/game/controls/GameControl";
+import {Keys} from "@/game/controls/GameControl";
+import ControlsManager from "@/managers/ControlsManager";
 import Screen from "@/game/Screen";
 import Sphere from "@/objects/Sphere";
-import Borders from "@/game/Borders";
-import Collision from "@/managers/Collision";
-import IObject from "@/objects/IObject";
-import {KeyEvent, KeyPressManager} from "@/managers/KeyPressManager";
+import Borders, {Sides} from "@/game/Borders";
 import Debug from "@/managers/Debug";
-import Scoreboard from "@/game/Scoreboard";
-import {BoxGeometry} from "three";
-import SoundPlayer, {GameSound} from "@/game/SoundPlayer";
-import PositionVector from "@/containers/PositionVector";
-import ClosestBorderSide from "@/objects/debug/ClosestBorderSide";
-import VelocityVector from "@/containers/VelocityVector";
-import DependencyContainer from "@/managers/DependencyContainer";
-import BallMovementManager from "@/managers/BallMovementManager";
-import BallTrajectory from "@/objects/debug/BallTrajectory";
+import Observable from "@/objects/base/Observable";
 
-export default class Game {
+export enum BallEvent {
+    COLLISION = 'collision'
+}
 
-    private players: Player[] = []
+export enum GameEvent {
+    GAME_OVER = 'game-over',
+    EXIT = 'exit',
+}
 
-    private ball: Sphere
+export default class Game extends Observable{
 
-    public screen: Screen
+    protected gameMode: AbstractGameMode;
 
-    private plane: Cube
+    protected screen!: Screen;
 
-    private borders: Borders = Borders.getInstance(this)
+    protected ball!: Sphere;
 
-    constructor() {
-        this.screen = new Screen()
-        Debug.getInstance().debug('Game', {
-            status: this.screen.isPlaying() ? 'running' : 'paused'
-        })
+    protected borders!: Borders
 
-        KeyPressManager.getInstance().addListener("p", KeyEvent.DOWN, () => {
-            console.log("Pause")
-            // Check if there is debug for pause, if not create it, if yes, delete it
+    public constructor(gameMode: AbstractGameMode) {
+        super();
+        this.gameMode = gameMode;
 
-            this.togglePause()
-            const playing = this.screen.isPlaying()
-            Debug.getInstance().debug('Game', {
-                status: playing ? 'paused' : 'running'
-            })
-        })
-
-        //Make resert listener
-        KeyPressManager.getInstance().addListener("r", KeyEvent.DOWN, () => {
-            this.reset()
-        })
-
-        this.setupPlayers()
+        this.setupScreen()
         this.setupBall()
-        // this.setupCollisions()
         this.setupBorders()
-        Scoreboard.setup({left: this.players[0], right: this.players[1]})
 
-        this.setupDependencyContainer()
+        this.gameMode.onSetup(this)
+
+        this.setControls()
     }
 
-    setupPlayers() {
-
-
-        const controls = [
-            {
-                up: "w",
-                down: "s",
-                voteForPause: "q"
-            },
-            {
-                up: "ArrowUp",
-                down: "ArrowDown",
-                voteForPause: "m"
-            }
-        ]
-        const distance = 2
-        const coords = [
-            {
-                x: -this.borders.width / 2 + distance,
-                y: 0
-            },
-            {
-                x: this.borders.width / 2 - distance,
-                y: 0
-            }
-        ]
-        const colors = ["blue", "red"]
-        const sides: PlayerSide[] = [PlayerSide.LEFT, PlayerSide.RIGHT]
-
-        for (let i = 0; i < 2; i++) {
-            // Create cube
-
-            const cube = new Cube({
-                width: 1,
-                height: 3
-            }, colors[i])
-
-            cube.setBorders(this.borders)
-
-            const player = new Player(cube, controls[i], sides[i])
-            player.setSpeed(.5)
-            const coord = coords[i]
-            cube.setPosition(new PositionVector(coord.x, coord.y, 0))
-
-            player.observe(PlayerEvent.VOTE_FOR_PAUSE, (data: any) => {
-                console.log(data)
-            })
-
-            // Add player to players
-            this.screen.addUpdatableObject(cube)
-            this.players.push(player)
-        }
-    }
-
-    private score(data: any) {
-        SoundPlayer.getInstance().play(GameSound.SCORE)
-        const result = data as { side: string }
-        this.ball.getPosition().set(0, 0, 0)
-        const sign = result.side === "left" ? 1 : -1
-        this.ball.setVelocity(new VelocityVector(sign*-.3,.3 , 0))
-        this.screen.setPlay(false)
-        if (result.side === "left") {
-            this.players[1].addPoint()
-        } else {
-            this.players[0].addPoint()
-        }
-
-    }
-
-    private setupBall() {
-        this.ball = new Sphere("white")
-        this.ball.observe("collision", this.score.bind(this))
-        this.ball.setVelocity(new VelocityVector(-0.1, .3, 0))
-        this.screen.addUpdatableObject(this.ball)
-    }
-
-    private setupBorders() {
-        this.borders.setDept(this.ball.getRadius() * 2)
-        const helper = this.borders.getObject()
-        this.screen.getScene().add(helper)
-        const line = new ClosestBorderSide(this.ball)
-        this.screen.addUpdatableObject(line)
-    }
-
-    private setupCollisions() {
-        const collision = Collision.getInstance()
-        collision.clear()
-
-        for (const player of this.players) {
-            collision.addPair(player.getSide(), player.getObject(), this.ball, (cube: IObject, ball: IObject) => {
-                const sphere = ball as Sphere
-                const cube1 = cube as Cube
-                const cubeGeometry = cube.getObject().geometry as BoxGeometry
-
-                let speed = sphere.getPaddleTouchSpeed(cube1)
-
-                const spVel = sphere.getVelocity()
-                const spPos = sphere.getPosition()
-
-                const dir = spVel.x > 0 ? 1 : -1
-                spVel.x = -speed * spVel.x
-                spPos.x = cube.getPosition().x + (-dir) * (cubeGeometry.parameters.width / 2 + 1)
-                SoundPlayer.getInstance().play(GameSound.BOUNCE1)
-            })
-        }
-
-
-    }
-
-    public runScreen() {
-        this.screen.animate()
-    }
-
-    public reset() {
-        this.screen.getScene().clear()
-        this.players = []
-        this.setupPlayers()
-        this.setupBall()
-        // this.setupCollisions()
-        this.setupBorders()
-    }
-
-    private setupDependencyContainer() {
-        const container = DependencyContainer.getInstance()
-        container.add(Game, this)
-        container.add(Borders, this.borders)
-
-        const movement = new BallMovementManager(this.players, this.ball)
-        container.add(BallMovementManager, movement)
-        const trajectory = new BallTrajectory(this.ball)
-        this.screen.addUpdatableObject(trajectory)
-
-        movement.observe('new-slope', (data: any ) => {
-            // @ts-ignore
-            trajectory.setPoint(data.position, data.velocity)
-        })
-
-        // Add static spheres
-        const halfHeight = this.borders.height / 2
-        const halfWidth = this.borders.width / 2
-        const posititions = [
-            new PositionVector(-halfWidth, -halfHeight, 0),
-            new PositionVector(0, -halfHeight, 0),
-            new PositionVector(halfWidth, -halfHeight, 0),
-
-            new PositionVector(-halfWidth, 0, 0),
-            new PositionVector(halfWidth, 0, 0),
-
-            new PositionVector(-halfWidth, halfHeight, 0),
-            new PositionVector(0, halfHeight, 0),
-            new PositionVector(halfWidth, halfHeight, 0),
-        ]
-
-        for (const position of posititions) {
-            const sphere = new Sphere("green")
-            sphere.setPosition(position)
-            this.screen.getScene().add(sphere.getObject())
-        }
-    }
-
-    togglePause() {
+    public togglePause(): void {
         const playing = this.screen.isPlaying()
         this.screen.setPlay(!playing)
+        Debug.getInstance().debug('Game', {isRunning: !playing})
+        this.gameMode.onPause()
     }
+
+    public exit(message: string): void {
+        this.notify(GameEvent.GAME_OVER, {message})
+        this.screen.setPlay(false)
+    }
+
+    public start(): void {
+        this.togglePause()
+        this.screen.animate()
+
+        this.gameMode.onStart()
+    }
+
+    public reset(): void {
+        this.gameMode.onReset()
+        ControlsManager.getInstance().clearAll()
+        this.screen.reset()
+    }
+
+    protected setControls(): void
+    {
+        const game = this.getGameControls()
+        const mode = this.gameMode.getGameControls()
+        const manager = ControlsManager.getInstance()
+
+        // loop every attribute in game
+        for (const name in game) {
+            manager.add(name, game[name])
+        }
+
+        for (const name in mode) {
+            manager.add(name, mode[name])
+        }
+    }
+
+    public getBall(): Sphere {
+        return this.ball
+    }
+
+    public getScreen(): Screen {
+        return this.screen
+    }
+
+    public getBorders(): Borders {
+        return this.borders
+    }
+
+    protected getGameControls(): IControlList {
+        const controls = gameControls
+        controls[Keys.PAUSE].keypress = () => this.togglePause()
+        setupControl(controls[Keys.BALL_LEFT], ()=>this.ball.getVelocity().x = -1, ()=>this.ball.getVelocity().x = 0)
+        setupControl(controls[Keys.BALL_RIGHT], ()=>this.ball.getVelocity().x = 1, ()=>this.ball.getVelocity().x = 0)
+        setupControl(controls[Keys.BALL_UP], ()=>this.ball.getVelocity().y = 1, ()=>this.ball.getVelocity().y = 0)
+        setupControl(controls[Keys.BALL_DOWN], ()=>this.ball.getVelocity().y = -1, ()=>this.ball.getVelocity().y = 0)
+        controls[Keys.STOP_BALL].keypress = () => this.ball.getVelocity().set(0, 0, 0)
+        return controls
+    }
+
+    private setupScreen(): void {
+        this.screen = new Screen()
+    }
+
+    private setupBorders(): void {
+        this.borders = Borders.getInstance()
+        this.borders.setDept(this.ball.getRadius() * 2)
+
+        this.screen.getScene().add(this.borders.getObject())
+    }
+
+    private setupBall(): void {
+        this.ball = new Sphere('white')
+        this.ball.observe(BallEvent.COLLISION, (side: { side: Sides }) => {
+            this.gameMode.onBallBorderCollision(side.side)
+        })
+        this.screen.addUpdatableObject('ball', this.ball)
+    }
+
 
 }

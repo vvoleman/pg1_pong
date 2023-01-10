@@ -1,14 +1,14 @@
-import IObject from "@/objects/IObject";
+import IObject from "@/objects/base/IObject";
 import {BufferGeometry, Line, LineBasicMaterial, LineSegments} from "three";
 import Borders from "@/game/Borders";
-import IUpdatable from "@/objects/IUpdatable";
 import PositionVector from "@/containers/PositionVector";
-import Debug from "@/managers/Debug";
+import IDrawable from "@/objects/base/IDrawable";
 
-export default class ClosestBorderSide implements IUpdatable {
+export default class ClosestBorderSide implements IDrawable {
 
     private debugObject: IObject
     private readonly line: Line|LineSegments
+    private running: boolean = false
 
     constructor(debugObject: IObject) {
         this.debugObject = debugObject
@@ -24,6 +24,17 @@ export default class ClosestBorderSide implements IUpdatable {
         return this
     }
 
+    setRunning(running: boolean): ClosestBorderSide {
+        this.running = running
+
+        this.getObject().visible = running
+        return this
+    }
+
+    getRunning(): boolean {
+        return this.running
+    }
+
     public setupObject(): Line {
         const positions = this.getPositions()
 
@@ -35,6 +46,8 @@ export default class ClosestBorderSide implements IUpdatable {
     }
 
     update(): void {
+        if (!this.running) return
+
         const positions = this.getPositions()
         this.line.geometry.setFromPoints([positions.start, positions.end]);
 

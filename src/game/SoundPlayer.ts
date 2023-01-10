@@ -1,6 +1,9 @@
 import {Audio, AudioListener, AudioLoader} from "three";
+// @ts-ignore
 import bounce1 from "../assets/sounds/bounce1.mp3";
+// @ts-ignore
 import bounce2 from "../assets/sounds/bounce2.mp3";
+// @ts-ignore
 import score from "../assets/sounds/score.mp3";
 
 

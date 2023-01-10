@@ -1,13 +1,15 @@
-import AbstractColorObject from "@/objects/AbstractColorObject";
+import AbstractColorObject from "@/objects/base/AbstractColorObject";
 import {BoxGeometry, Mesh, SphereGeometry} from "three";
 import Borders, {Sides} from "@/game/Borders";
 import Cube from "@/objects/Cube";
 import PositionVector from "@/containers/PositionVector";
-import AbstractObject from "@/objects/AbstractObject";
+import AbstractObject from "@/objects/base/AbstractObject";
 
 export default class Sphere extends AbstractColorObject {
 
     //private radius: number = 150
+    private borders: Borders = Borders.getInstance()
+    private _dummy!: Sphere
 
     public getRadius(): number {
         return 1
@@ -35,7 +37,7 @@ export default class Sphere extends AbstractColorObject {
         const distance = Math.min(Math.max(realDistance, minDistance), maxDistance)
 
 
-        const maxSpeed = 1.5
+        const maxSpeed = 1.3
         const minSpeed = 0.9
         return Math.round(((distance - minDistance) / (maxDistance - minDistance) * (maxSpeed - minSpeed) + minSpeed) * 100) / 100
     }
@@ -43,7 +45,9 @@ export default class Sphere extends AbstractColorObject {
     protected setupObject(): Mesh {
         const geometry = new SphereGeometry(this.getRadius(), 32, 32);
         const material = this.material
-        return new Mesh(geometry, material)
+        const obj = new Mesh(geometry, material);
+        obj.name = 'sphere'
+        return obj
     }
 
     public bounceY(): void {
@@ -62,10 +66,18 @@ export default class Sphere extends AbstractColorObject {
     }
 
     update(): void {
-        // Get position one frame ahead
-        const touched = Borders.getInstance().getTouchedSide(this)
-
+        const pos = this.getPosition()
         const vel = this.getVelocity()
+
+        const newPos = new PositionVector(pos.x + vel.x,
+            pos.y + vel.y,
+            pos.z + vel.z)
+
+        const future = this.getDummy().setPosition(newPos.clone())
+
+        // Get position one frame ahead
+        const touched = this.borders.getTouchedSide(future)
+
         if (touched) {
             this.notify('collision', {side: touched})
             if (touched == Sides.TOP || touched == Sides.BOTTOM) {
@@ -73,21 +85,16 @@ export default class Sphere extends AbstractColorObject {
             } else if (touched == Sides.LEFT || touched == Sides.RIGHT) {
                 this.bounceX()
             }
+        } else {
+            this.setPosition(newPos)
+            this.object.position.set(newPos.x, newPos.y, newPos.z)
         }
-        const pos = this.getPosition()
+    }
 
-        const newPos = new PositionVector(pos.x + vel.x,
-            pos.y + vel.y,
-            pos.z + vel.z)
-
-
-        // Calculate slope between current and next position
-        // Debug.getInstance().debug('Slope', {
-        //     slopeReal: slope,
-        //     slopeCalculated: vel.y / vel.x,
-        // })
-
-        this.setPosition(newPos)
-        this.object.position.set(newPos.x, newPos.y, newPos.z)
+    public getDummy(): Sphere {
+        if (!this._dummy) {
+            this._dummy = new Sphere('black')
+        }
+        return this._dummy
     }
 }

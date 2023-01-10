@@ -1,5 +1,5 @@
 import {BoxGeometry, Mesh} from "three";
-import AbstractColorObject from "@/objects/AbstractColorObject";
+import AbstractColorObject from "@/objects/base/AbstractColorObject";
 import Borders, {Sides} from "@/game/Borders";
 import PositionVector from "@/containers/PositionVector";
 
@@ -8,9 +8,11 @@ export interface Size {
     height: number,
 }
 
-export default class Cube extends AbstractColorObject{
+export default class Cube extends AbstractColorObject {
 
-    private borders: Borders|null = null
+    private borders!: Borders
+
+    private _dummy!: Cube
 
     constructor(size: Size, color: string) {
         super(color);
@@ -33,6 +35,19 @@ export default class Cube extends AbstractColorObject{
         return this
     }
 
+    public getSize(): Size {
+        const width = (this.object.geometry as BoxGeometry).parameters.width
+        const height = (this.object.geometry as BoxGeometry).parameters.height
+        return {width, height}
+    }
+
+    private getDummy(): Cube {
+        if (this._dummy === undefined) {
+            this._dummy = new Cube({width: 1, height: 1}, this.color)
+        }
+        return this._dummy
+    }
+
     update(): void {
 
         const pos = this.getPosition()
@@ -40,35 +55,37 @@ export default class Cube extends AbstractColorObject{
 
         const newPos = new PositionVector(pos.x + vel.x, pos.y + vel.y, pos.z + vel.z)
 
-        const objWidth = (this.object.geometry as BoxGeometry).parameters.width
-        const objHeight = (this.object.geometry as BoxGeometry).parameters.height
+        const dummy = this.getDummy()
+        dummy.setSize(this.getSize())
+
+        const objWidth = dummy.getSize().width
+        const objHeight = dummy.getSize().height
+
+        dummy.setPosition(newPos)
 
         // Does the object touch the borders?
-        if (this.borders !== null) {
-            const touchedBorder = this.borders.getTouchedSide(this)
-            if (touchedBorder !== null) {
-                console.log(touchedBorder)
-                switch (touchedBorder) {
-                    case Sides.LEFT:
-                        newPos.x = -this.borders.width / 2 + objWidth / 2
-                        break
-                    case Sides.RIGHT:
-                        newPos.x = this.borders.width / 2 - objWidth / 2
-                        break
-                    case Sides.TOP:
-                        newPos.y = this.borders.height / 2 - objHeight / 2
-                        break
-                    case Sides.BOTTOM:
-                        newPos.y = -this.borders.height / 2 + objHeight /2
-                        break
-                }
+        const touchedBorder = this.borders.getTouchedSide(dummy)
+        if (touchedBorder !== null) {
+            switch (touchedBorder) {
+                case Sides.LEFT:
+                    newPos.x = -this.borders.width / 2 + objWidth / 2
+                    break
+                case Sides.RIGHT:
+                    newPos.x = this.borders.width / 2 - objWidth / 2
+                    break
+                case Sides.TOP:
+                    newPos.y = this.borders.height / 2 - objHeight / 2
+                    break
+                case Sides.BOTTOM:
+                    newPos.y = -this.borders.height / 2 + objHeight / 2
+                    break
             }
+        } else {
+            this.setPosition(newPos)
+            this.object.position.set(newPos.x, newPos.y, newPos.z)
         }
 
-        this.setPosition(newPos)
-        this.object.position.set(newPos.x, newPos.y, newPos.z)
+
     }
-
-
 
 }

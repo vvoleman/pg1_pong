@@ -1,31 +1,34 @@
 import AbstractGameMode from "@/game/modes/AbstractGameMode";
-import Player, { PlayerSide} from "@/game/Player";
-import {setupControl} from "@/game/controls/IControl";
+import Player, {PlayerSide} from "@/game/Player";
+import IControlList, {setupControl} from "@/game/controls/IControl";
 import gameControls, {Keys} from "@/game/controls/NormalGameControl";
-import IControlList from "@/game/controls/IControl";
 import Borders, {Sides} from "@/game/Borders";
-import _Game from "@/game/_Game";
+import game from "@/game/Game";
 import Cube from "@/objects/Cube";
 import PositionVector from "@/containers/PositionVector";
 import VelocityVector from "@/containers/VelocityVector";
-import BallMovementManager from "@/managers/BallMovementManager";
+import BallMovementManager, {MovementEvent} from "@/managers/BallMovementManager";
 import SoundPlayer, {GameSound} from "@/game/SoundPlayer";
 import Scoreboard from "@/game/Scoreboard";
+import BallTrajectory from "@/objects/debug/BallTrajectory";
+import ClosestBorderSide from "@/objects/debug/ClosestBorderSide";
 
 export default class NormalGameMode extends AbstractGameMode {
 
     protected players: Player[] = []
     protected movement!: BallMovementManager
     protected maxPoints: number
-
     protected borders!: Borders
+    private debugMode: boolean = false
+    private trajectory!: BallTrajectory
+    private closest!: ClosestBorderSide
 
     constructor(maxPoints: number = 5) {
         super();
         this.maxPoints = maxPoints;
     }
 
-    onSetup(game: _Game) {
+    onSetup(game: game) {
         super.onSetup(game);
 
         this.borders = game.getBorders()
@@ -42,6 +45,7 @@ export default class NormalGameMode extends AbstractGameMode {
     onReset() {
         super.onReset();
         Scoreboard.removeInstance()
+        this.game.getBall().getVelocity().set(0,0,0)
     }
 
     getDescription(): string {
@@ -54,6 +58,8 @@ export default class NormalGameMode extends AbstractGameMode {
 
     getGameControls(): IControlList {
         const controls = gameControls
+
+        controls[Keys.DEBUG].keypress = () => this.toggleDebugMode()
 
         // Left player up
         setupControl(
@@ -85,7 +91,6 @@ export default class NormalGameMode extends AbstractGameMode {
 
         //Escape
         controls[Keys.EXIT].keyup = () => this.game.exit("Hra byla ukončena uživatelem.")
-        console.log(controls)
         return controls
     }
 
@@ -106,9 +111,8 @@ export default class NormalGameMode extends AbstractGameMode {
         player.addPoint()
         ball.setPosition(new PositionVector(0, 0, 0))
 
-        console.log(player.getScore(), this.maxPoints)
         if (player.getScore() >= this.maxPoints) {
-            this.game.exit(`Hráč v${player.getSide()==='left'?'levo':'pravo'} vyhrál!`)
+            this.game.exit(`Hráč v${player.getSide() === 'left' ? 'levo' : 'pravo'} vyhrál!`)
             return
         }
 
@@ -117,11 +121,29 @@ export default class NormalGameMode extends AbstractGameMode {
         // this.game.togglePause()
     }
 
-    private setupCollision(): void {
-        this.movement = new BallMovementManager(this.players, this.game.getBall())
+    protected toggleDebugMode(): void {
+        this.debugMode = !this.debugMode
+
+        this.trajectory.setRunning(this.debugMode)
+        this.closest.setRunning(this.debugMode)
     }
 
-    private movePlayers(y: number): void{
+    private setupCollision(): void {
+        this.movement = new BallMovementManager(this.players, this.game.getBall())
+        this.trajectory = new BallTrajectory(this.movement)
+        this.game.getScreen().addUpdatableObject('trajectory', this.trajectory)
+
+        this.closest = new ClosestBorderSide(this.game.getBall())
+        this.game.getScreen().addUpdatableObject('closest',this.closest)
+
+        this.movement.observe(MovementEvent.PLAYER_COLLISION, (player: Player) => {
+            const sound = player.getSide() === PlayerSide.LEFT ? GameSound.BOUNCE1 : GameSound.BOUNCE2
+
+            SoundPlayer.getInstance().play(sound)
+        })
+    }
+
+    private movePlayers(y: number): void {
         for (const player of this.players) {
             player.getObject().getPosition().y = y
         }
@@ -129,7 +151,8 @@ export default class NormalGameMode extends AbstractGameMode {
 
     protected refreshBallSpeed(dir: boolean = false): void {
         const sign = dir ? 1 : -1;
-        this.game.getBall().setVelocity(new VelocityVector(sign*.3, .3, 0))
+        this.game.getBall().setVelocity(new VelocityVector(sign * .3, .3, 0))
+        this.movement.refreshPath()
     }
 
     protected setupPlayers(): void {

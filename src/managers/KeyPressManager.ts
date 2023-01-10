@@ -27,7 +27,6 @@ export class KeyPressManager {
         const events = [KeyEvent.UP, KeyEvent.DOWN, KeyEvent.PRESS]
 
         for (const event of events) {
-            console.log(event)
             document.addEventListener(event, (e: KeyboardEvent) => {
                 const key = e.key
 
@@ -35,7 +34,6 @@ export class KeyPressManager {
                     return
                 }
 
-                console.log(event)
                 for (const callback of this.keyEvents[event][key]) {
                     callback(e)
                 }
@@ -68,7 +66,6 @@ export class KeyPressManager {
         if (this.keyEvents[event][key] === undefined) {
             return this
         }
-
         const index = this.keyEvents[event][key].indexOf(callback)
         if (index > -1) {
             this.keyEvents[event][key].splice(index, 1)

@@ -1,11 +1,10 @@
-import IObject from "@/objects/IObject";
+import IObject from "@/objects/base/IObject";
 import {Mesh, MeshBasicMaterial} from "three";
 import VelocityVector from "@/containers/VelocityVector";
 import PositionVector from "@/containers/PositionVector";
-import Observable from "@/objects/Observable";
-import IUpdatable from "@/objects/IUpdatable";
+import Observable from "@/objects/base/Observable";
 
-export default abstract class AbstractObject extends Observable implements IObject, IUpdatable {
+export default abstract class AbstractObject extends Observable implements IObject {
 
     protected object: Mesh;
     protected material: MeshBasicMaterial

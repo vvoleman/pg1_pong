@@ -1,4 +1,4 @@
-import IObject from "@/objects/IObject";
+import IObject from "@/objects/base/IObject";
 import {Box3} from "three";
 
 export class CollisionPair {

@@ -1,4 +1,4 @@
-import Observable from "@/objects/Observable";
+import Observable from "@/objects/base/Observable";
 import Cube from "@/objects/Cube";
 
 export enum PlayerControl {

@@ -10,7 +10,8 @@ import {GUI} from "dat.gui";
 import Collision from "@/managers/Collision";
 import Scoreboard from "@/game/Scoreboard";
 import SoundPlayer from "@/game/SoundPlayer";
-import IUpdatable from "@/objects/IUpdatable";
+import type IUpdatable from "@/objects/base/IUpdatable";
+import IDrawable from "@/objects/base/IDrawable";
 
 export default class Screen {
 
@@ -59,8 +60,19 @@ export default class Screen {
     }
 
     public addUpdatableObject(name: string, object: IUpdatable) {
-        this.scene.add(object.getObject())
+        // if object implements IDrawable, add it to the scene
+        if (this.hasDrawable(object)) {
+            const entity = (object as IDrawable).getObject()
+            entity.name = name
+            this.scene.add(entity)
+        }
+
         this.updatableObjects[name] = object
+    }
+
+    private hasDrawable(obj: IUpdatable): boolean
+    {
+        return 'getObject' in obj
     }
 
     public removeUpdatableObject(name: string) {

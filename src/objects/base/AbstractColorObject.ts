@@ -1,4 +1,4 @@
-import AbstractObject from "@/objects/AbstractObject";
+import AbstractObject from "@/objects/base/AbstractObject";
 import {Mesh, MeshBasicMaterial} from "three";
 
 export default abstract class AbstractColorObject extends AbstractObject{

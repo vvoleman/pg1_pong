@@ -1,60 +1,45 @@
-import IUpdatable from "@/objects/IUpdatable";
-import IObject from "@/objects/IObject";
 import {BufferGeometry, Line, LineBasicMaterial, LineSegments, Vector3} from "three";
-import PositionVector from "@/containers/PositionVector";
-import VelocityVector from "@/containers/VelocityVector";
-import Borders from "@/game/Borders";
-import DependencyContainer from "@/managers/DependencyContainer";
-import Debug from "@/managers/Debug";
-import Game from "@/game/Game";
 import BallMovementManager from "@/managers/BallMovementManager";
+import IDrawable from "@/objects/base/IDrawable";
 
-export default class BallTrajectory implements IUpdatable {
-    private debugObject: IObject
+export default class BallTrajectory implements IDrawable {
     private readonly line: Line | LineSegments
-    private position: PositionVector
-    private velocity: VelocityVector
-    private borders: Borders
     private movement: BallMovementManager
+    private running: boolean = false
 
-    constructor(debugObject: IObject) {
-        this.debugObject = debugObject
+    constructor(movement: BallMovementManager) {
         this.line = this.setupObject()
-        this.borders = DependencyContainer.getInstance().get(Borders)
-        this.movement = DependencyContainer.getInstance().get(BallMovementManager)
+        this.movement = movement
+    }
+
+    setRunning(running: boolean): BallTrajectory {
+        this.running = running
+
+        this.getObject().visible = running
+        return this
+    }
+
+    getRunning(): boolean {
+        return this.running
     }
 
     public getObject(): Line | LineSegments {
         return this.line
     }
 
-    public setDebugObject(object: IObject): BallTrajectory {
-        this.debugObject = object
-        return this
-    }
-
     public setupObject(): Line {
         const geometry = new BufferGeometry().setFromPoints([]);
-        const material = new LineBasicMaterial({color: 'green', linewidth: 2});
+        const material = new LineBasicMaterial({color: 'green'});
         return new Line(geometry, material);
     }
 
-    setPoint(position: PositionVector, velocity: VelocityVector) {
-        this.position = position
-        this.velocity = velocity
-    }
-
     update(): void {
-        if (!this.position || !this.velocity) {
-            return
-        }
+        if (!this.running) return
 
         const positions = this.getVertices()
-        console.log(positions)
         this.line.geometry.setFromPoints(positions);
 
         this.line.geometry.attributes.position.needsUpdate = true;
-        this.velocity = null
     }
 
     private getVertices(): Array<Vector3> {

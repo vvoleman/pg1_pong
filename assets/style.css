@@ -41,7 +41,7 @@ body {
 }
 
 .ui {
-    border: 1px solid red;
+    background: #333333;
     position: absolute;
     width: 100vw;
     height: 100vh;
@@ -58,7 +58,10 @@ body {
 button {
     cursor: pointer;
 }
-
+#message {
+    color: white;
+    font-size: 1.5rem;
+}
 .ui .mode {
     font-size: 23px;
     display: block;
@@ -93,4 +96,28 @@ button {
     background: #666666;
     min-height: 100px;
     display: none;
+}
+
+kbd {
+    border-radius: 3px;
+    border:1px solid #aaa;
+    margin:3px;
+    padding: 2px 10px;
+    background: #cecece;
+}
+.controls {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 10px;
+}
+.controls .item {
+    justify-content: center;
+    align-items: flex-start;
+    display:inline-flex;
+    flex-direction: column;
+    width: auto;
+}
+.controls .item span {
+    font-size: 20px;
+    color: white;
 }

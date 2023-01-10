@@ -33,11 +33,12 @@ export default class ControlsManager {
     }
 
     public remove(name: string): void {
-        this._manager.removeListener(name, KeyEvent.DOWN, this.controls[name].keydown)
-        this._manager.removeListener(name, KeyEvent.UP, this.controls[name].keyup)
+        const control = this.controls[name]
+        this._manager.removeListener(control.default, KeyEvent.DOWN, control.keydown)
+        this._manager.removeListener(control.default, KeyEvent.UP, control.keyup)
 
         if (this.controls[name].keypress !== undefined) {
-            this._manager.removeListener(name, KeyEvent.PRESS, this.controls[name].keypress as Function)
+            this._manager.removeListener(control.default, KeyEvent.PRESS, control.keypress as Function)
         }
 
         delete this.controls[name]

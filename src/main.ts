@@ -1,7 +1,9 @@
 import AbstractGameMode from "@/game/modes/AbstractGameMode";
-import _Game, {GameEvent} from "@/game/_Game";
+import Game, {GameEvent} from "@/game/Game";
 import NormalGameMode from "@/game/modes/NormalGameMode";
 import ComputerGameMode from "@/game/modes/ComputerGameMode";
+import AutomaticGameMode from "@/game/modes/AutomaticGameMode";
+import {Difficulty} from "@/game/ComputerWrapper";
 
 const menu = document.getElementById("menu");
 const result = document.getElementById("result");
@@ -12,7 +14,7 @@ if (menu === null || result === null) {
 // Setup new game buttons
 const normalGame = menu?.querySelector("[data-type=pvp]")
 const computerGame = menu?.querySelector("[data-type=pve]")
-const doubleComputerGame = menu?.querySelector("[data-type=eve]")
+const automaticMode = menu?.querySelector("[data-type=eve]")
 
 // Restart button
 const restart = result?.querySelector("[data-type=restart]")
@@ -27,7 +29,11 @@ normalGame?.addEventListener("click", () => {
 })
 
 computerGame?.addEventListener("click", () => {
-    startNewGame(menu,result, new ComputerGameMode(5))
+    startNewGame(menu,result, new ComputerGameMode(5, Difficulty.HARD))
+})
+
+automaticMode?.addEventListener("click", () => {
+    startNewGame(menu,result, new AutomaticGameMode(5, Difficulty.HARD, Difficulty.HARD))
 })
 
 
@@ -39,7 +45,7 @@ function startNewGame(menu: HTMLElement, result: HTMLElement, mode: AbstractGame
         throw new Error("Game element not found.");
     }
 
-    const game = new _Game(mode)
+    const game = new Game(mode)
     el.style.display = 'block'
 
     game.start()
@@ -51,7 +57,7 @@ function startNewGame(menu: HTMLElement, result: HTMLElement, mode: AbstractGame
         result.style.display = 'flex'
     })
 
-    game.observe(GameEvent.EXIT, (data: any) => {
+    game.observe(GameEvent.EXIT, () => {
         console.log('EXIT Z VENKU')
         game.reset()
         el.style.display = 'none'
