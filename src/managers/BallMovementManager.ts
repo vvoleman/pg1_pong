@@ -5,9 +5,11 @@ import Observable from "@/objects/Observable";
 import {BoxGeometry, Vector3} from "three";
 import Borders, {Sides} from "@/game/Borders";
 import PositionVector from "@/containers/PositionVector";
-import DependencyContainer from "@/managers/DependencyContainer";
-import Debug from "@/managers/Debug";
-import Game from "@/game/Game";
+
+export enum MovementEvent {
+    PLAYER_COLLISION = "player-collision",
+    NEW_SLOPE = "new-slope",
+}
 
 export default class BallMovementManager extends Observable{
 
@@ -20,7 +22,7 @@ export default class BallMovementManager extends Observable{
         super();
         this.players = players
         this.ball = ball
-        this.borders = DependencyContainer.getInstance().get(Borders);
+        this.borders = Borders.getInstance()
         this.setupPlayerListeners()
     }
 
@@ -34,7 +36,7 @@ export default class BallMovementManager extends Observable{
     }
 
     protected handlePlayerCollision(player: Player) {
-        this.notify('player-collision', player)
+        this.notify(MovementEvent.PLAYER_COLLISION, player)
 
         const cube = player.getObject()
         const cubeGeometry = cube.getObject().geometry as BoxGeometry
@@ -49,7 +51,7 @@ export default class BallMovementManager extends Observable{
         ballPosition.x = cube.getPosition().x + (-dir) * (cubeGeometry.parameters.width / 2 + 1)
 
         this.path = this.calculatePath()
-        this.notify('new-slope', {velocity: this.ball.getVelocity().clone(), position: ballPosition.clone()})
+        this.notify(MovementEvent.NEW_SLOPE, {velocity: this.ball.getVelocity().clone(), position: ballPosition.clone()})
     }
 
     private calculatePath(): Array<Vector3> {

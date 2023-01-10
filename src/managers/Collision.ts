@@ -1,16 +1,13 @@
 import IObject from "@/objects/IObject";
 import {Box3} from "three";
-import Cube from "@/objects/Cube";
-import Sphere from "@/objects/Sphere";
-import Debug from "@/managers/Debug";
 
 export class CollisionPair {
-    private object1: IObject;
-    private object2: IObject;
+    private readonly object1: IObject;
+    private readonly object2: IObject;
 
-    private id: string
+    private readonly id: string
 
-    private callback: (object1: IObject, object2: IObject) => void;
+    private readonly callback: (object1: IObject, object2: IObject) => void;
 
     constructor(id: string, object1: IObject, object2: IObject, callback: (object1: IObject, object2: IObject) => void) {
         this.object1 = object1;

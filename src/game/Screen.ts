@@ -1,12 +1,11 @@
 import {
-    Camera,
+    Camera, Object3D,
     OrthographicCamera,
     Renderer,
     Scene,
     WebGLRenderer
 } from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
-import {TrackballControls} from "three/examples/jsm/controls/TrackballControls";
 import {GUI} from "dat.gui";
 import Collision from "@/managers/Collision";
 import Scoreboard from "@/game/Scoreboard";
@@ -15,19 +14,18 @@ import IUpdatable from "@/objects/IUpdatable";
 
 export default class Screen {
 
-    private scene: Scene
-    private renderer: Renderer
-    private camera: Camera
-    private gui: GUI
+    private scene!: Scene
+    private renderer!: Renderer
+    private camera!: Camera
+    private gui!: GUI
 
-    private controls: TrackballControls
-    private stats: Stats
+    private stats!: Stats
 
     private play: boolean = false
 
     private collision: Collision = Collision.getInstance()
 
-    private updatableObjects: IUpdatable[] = []
+    private updatableObjects: {[key:string]:IUpdatable} = {}
 
     constructor() {
         this.setupScene()
@@ -42,9 +40,35 @@ export default class Screen {
         return this.play
     }
 
-    public addUpdatableObject(object: IUpdatable) {
+    public reset(): void {
+        this.scene.clear()
+        // remove inside from #app
+        const app = document.getElementById("app")
+        const stats = document.getElementById("stats")
+        const debug = document.getElementById("debug")
+        if (app) {
+            app.innerHTML = ''
+        }
+        if (stats) {
+            stats.innerHTML = ''
+        }
+        if (debug) {
+            debug.innerHTML = ''
+        }
+
+    }
+
+    public addUpdatableObject(name: string, object: IUpdatable) {
         this.scene.add(object.getObject())
-        this.updatableObjects.push(object)
+        this.updatableObjects[name] = object
+    }
+
+    public removeUpdatableObject(name: string) {
+        if (!this.updatableObjects[name]) {
+            throw new Error(`Object ${name} not found`)
+        }
+        this.scene.remove(this.updatableObjects[name] as unknown as Object3D)
+        delete this.updatableObjects[name]
     }
 
     public getScene(): Scene {
@@ -64,7 +88,7 @@ export default class Screen {
         renderer.setSize( window.innerWidth, window.innerHeight );
 
         renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        document.getElementById("app")?.appendChild(renderer.domElement);
 
         camera.add(SoundPlayer.getInstance().getListener())
 
@@ -75,7 +99,7 @@ export default class Screen {
 
     setupPlugins () {
         this.stats = Stats();
-        document.body.appendChild(this.stats.dom);
+        document.getElementById("stats")?.appendChild(this.stats.dom);
 
         // this.gui = new GUI()
         // const folder = this.gui.addFolder('Camera')
@@ -97,8 +121,8 @@ export default class Screen {
         requestAnimationFrame(() => this.animate());
 
         if (this.play) {
-            for (const updatableObject of this.updatableObjects) {
-                updatableObject.update()
+            for (const objectName in this.updatableObjects) {
+                this.updatableObjects[objectName].update()
             }
             this.collision.update()
             const scoreboard = Scoreboard.getInstance()

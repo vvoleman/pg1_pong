@@ -1,5 +1,5 @@
 import AbstractColorObject from "@/objects/AbstractColorObject";
-import {BoxGeometry, Mesh, SphereGeometry, Sphere as SphereTree} from "three";
+import {BoxGeometry, Mesh, SphereGeometry} from "three";
 import Borders, {Sides} from "@/game/Borders";
 import Cube from "@/objects/Cube";
 import PositionVector from "@/containers/PositionVector";
@@ -40,14 +40,25 @@ export default class Sphere extends AbstractColorObject {
         return Math.round(((distance - minDistance) / (maxDistance - minDistance) * (maxSpeed - minSpeed) + minSpeed) * 100) / 100
     }
 
-    getSphereObject(): SphereTree {
-        return new SphereTree(this.getPosition(), this.getRadius())
-    }
-
     protected setupObject(): Mesh {
         const geometry = new SphereGeometry(this.getRadius(), 32, 32);
         const material = this.material
         return new Mesh(geometry, material)
+    }
+
+    public bounceY(): void {
+        const vel = this.getVelocity()
+        vel.y = -vel.y
+    }
+
+    public bounceX(): void {
+        const vel = this.getVelocity()
+        vel.x = -vel.x
+    }
+
+    protected reset(): void {
+        this.setPosition(new PositionVector(0, 0, 0))
+        this.setVelocity(new PositionVector(-.1, .3, 0))
     }
 
     update(): void {
@@ -56,13 +67,11 @@ export default class Sphere extends AbstractColorObject {
 
         const vel = this.getVelocity()
         if (touched) {
+            this.notify('collision', {side: touched})
             if (touched == Sides.TOP || touched == Sides.BOTTOM) {
-                const vel = this.getVelocity()
-                vel.y = -vel.y
+                this.bounceY()
             } else if (touched == Sides.LEFT || touched == Sides.RIGHT) {
-                this.notify('collision', {side: touched})
-                const vel = this.getVelocity()
-                vel.x = -vel.x
+                this.bounceX()
             }
         }
         const pos = this.getPosition()

@@ -38,7 +38,6 @@ export default class Cube extends AbstractColorObject{
         const pos = this.getPosition()
         const vel = this.getVelocity()
 
-        this.setVelocity(vel)
         const newPos = new PositionVector(pos.x + vel.x, pos.y + vel.y, pos.z + vel.z)
 
         const objWidth = (this.object.geometry as BoxGeometry).parameters.width
@@ -67,7 +66,6 @@ export default class Cube extends AbstractColorObject{
         }
 
         this.setPosition(newPos)
-
         this.object.position.set(newPos.x, newPos.y, newPos.z)
     }
 

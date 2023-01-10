@@ -2,7 +2,7 @@ import Player from "@/game/Player";
 
 export default class Scoreboard {
 
-    private static _instance: Scoreboard
+    private static _instance: Scoreboard|undefined
 
     private players: { left: Player, right: Player }
 
@@ -21,6 +21,11 @@ export default class Scoreboard {
         this.rightElement.innerText = this.players.right.getScore().toString()
     }
 
+    reset() {
+        this.leftElement.innerText = "0"
+        this.rightElement.innerText = "0"
+    }
+
     public static setup(players: { left: Player, right: Player }): Scoreboard {
         if (!this._instance) {
             this._instance = new Scoreboard(players)
@@ -29,7 +34,11 @@ export default class Scoreboard {
     }
 
     public static getInstance(): Scoreboard {
-        return this._instance
+        return <Scoreboard>this._instance
+    }
+
+    public static removeInstance() {
+        this._instance = undefined
     }
 
 }

@@ -5,68 +5,34 @@
 	<link rel="icon" type="image/svg+xml" href="/vite.svg"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 	<title>Vite + TS</title>
-	<style>
-        body {
-            margin: 0;
-			overflow: hidden;
-        }
-		#debug {
-			border-radius: 0 0 0 0.5rem;
-			position: absolute;
-			background: white;
-			right:0;
-			width: 300px;
-			height: auto;
-			padding: 10px;
-		}
-		#debug > div {
-			background: #eaeaea;
-			padding: 5px;
-		}
-		#debug div b {
-			/* make space between */
-			border-bottom: 1px solid #ccc;
-		}
-		#debug > div:not(:last-child) {
-			margin-bottom: 10px;
-		}
-
-		#scoreboard {
-			position: absolute;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			display: flex;
-			justify-content: center;
-			align-items: start;
-			font-size: 1rem;
-			font-weight: bold;
-			color: #eaeaea;
-		}
-		#scoreboard > div {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			width: 100%;
-			height: 100%;
-			color: #666;
-			font-size: 4rem;
-		}
-
-		#scoreboard > div:nth-child(1) {
-			align-items: end;
-			margin-right: 10%;
-		}
-	</style>
+	<link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+<div id="stats"></div>
 <div id="debug"></div>
-<div id="scoreboard">
-	<div class="team" id="left">0</div>
-	<div class="team" id="right">0</div>
-</div>
 
-<div id="app"></div>
+<div id="menu" class="ui">
+	<div class="buttons">
+		<button class="mode" data-type="pvp">PvP</button>
+		<button class="mode" data-type="pve">Proti počítači</button>
+		<button class="mode" data-type="eve">Jen počítače</button>
+	</div>
+</div>
+<div id="result" class="ui" style="display: none">
+	<div class="buttons">
+		<span id="message">GG</span>
+		<button class="mode" data-type=restart>Nová hra</button>
+	</div>
+</div>
+<div id="game" style="display: none;">
+	<div id="scoreboard">
+		<div class="team" id="left">0</div>
+		<div class="team" id="right">0</div>
+	</div>
+	<div id="app"></div>
+	<div id="controls">
+	</div>
+</div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

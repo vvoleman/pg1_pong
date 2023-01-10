@@ -27,11 +27,15 @@ export class KeyPressManager {
         const events = [KeyEvent.UP, KeyEvent.DOWN, KeyEvent.PRESS]
 
         for (const event of events) {
+            console.log(event)
             document.addEventListener(event, (e: KeyboardEvent) => {
                 const key = e.key
+
                 if (this.keyEvents[event][key] === undefined) {
                     return
                 }
+
+                console.log(event)
                 for (const callback of this.keyEvents[event][key]) {
                     callback(e)
                 }

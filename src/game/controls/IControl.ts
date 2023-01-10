@@ -1,8 +1,9 @@
-interface IControl {
+export interface IControl {
     name: string;
     default: string;
     keydown: KeyCallback;
     keyup: KeyCallback;
+    keypress?: KeyCallback;
 }
 
 export default interface IControlList {

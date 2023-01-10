@@ -1,4 +1,3 @@
-import Sphere from "@/objects/Sphere";
 import IObject from "@/objects/IObject";
 import {Box3, BoxGeometry, BoxHelper, Mesh, MeshBasicMaterial,} from "three";
 import AbstractObject from "@/objects/AbstractObject";

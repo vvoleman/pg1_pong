@@ -5,6 +5,7 @@ export enum Keys {
     LEFT_PLAYER_DOWN='left_player_down',
     RIGHT_PLAYER_UP='right_player_up',
     RIGHT_PLAYER_DOWN='right_player_down',
+    EXIT='exit',
     DEBUG='debug',
 }
 
@@ -39,6 +40,12 @@ const gameControls: IControlList = {
         default: ';',
         keydown: () => {},
         keyup: () => {},
+    },
+    [Keys.EXIT]: {
+        name: 'Exit',
+        default: 'Escape',
+        keydown: () => {},
+        keyup: () => {}
     }
 }
 

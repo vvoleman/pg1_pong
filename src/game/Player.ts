@@ -1,14 +1,9 @@
-import IObject from "@/objects/IObject";
 import Observable from "@/objects/Observable";
-import {KeyEvent, KeyPressManager} from "@/managers/KeyPressManager";
-import {Side} from "three";
-import {Sides} from "@/game/Borders";
 import Cube from "@/objects/Cube";
 
 export enum PlayerControl {
     UP = "up",
     DOWN = "down",
-    VOTE_FOR_PAUSE = "voteForPause",
 }
 
 export enum PlayerEvent {
@@ -26,31 +21,21 @@ export type ControlSettings = {
 
 export default class Player extends Observable {
 
-    private object: Cube
-
-    private controls: ControlSettings
+    private readonly object: Cube
 
     private score: number
 
-    private isPaused: boolean
-
     private speed: number
 
-    private side: PlayerSide
+    private readonly side: PlayerSide
 
-    constructor(object: Cube, controls: ControlSettings, side: PlayerSide) {
+    constructor(object: Cube, side: PlayerSide) {
         super()
 
         this.score = 0
-        this.isPaused = false
-
-        this.controls = controls
         this.object = object
         this.side = side
         this.speed = 0.1
-
-        this.setupControls()
-        console.log(this.controls)
     }
 
     public setSpeed(speed: number): void {
@@ -88,43 +73,7 @@ export default class Player extends Observable {
 
     public moveDown(start: boolean = true): void {
         const velocity = this.object.getVelocity()
-        velocity.y = start ? - this.speed : 0
+        velocity.y = start ? -this.speed : 0
     }
-
-
-    private setupControls()
-        :
-        void {
-        let manager = KeyPressManager.getInstance()
-
-        // Up
-        manager.addListener(this.controls[PlayerControl.UP], KeyEvent.DOWN, () => {
-            const velocity = this.object.getVelocity()
-            velocity.y = this.speed
-        })
-
-        manager.addListener(this.controls[PlayerControl.UP], KeyEvent.UP, () => {
-            const velocity = this.object.getVelocity()
-            velocity.y = 0
-        })
-
-        // Down
-        manager.addListener(this.controls[PlayerControl.DOWN], KeyEvent.DOWN, () => {
-            const velocity = this.object.getVelocity()
-            velocity.y = -this.speed
-        })
-
-        manager.addListener(this.controls[PlayerControl.DOWN], KeyEvent.UP, () => {
-            const velocity = this.object.getVelocity()
-            velocity.y = 0
-        })
-
-        // Vote for pause
-        manager.addListener(this.controls[PlayerControl.VOTE_FOR_PAUSE], KeyEvent.DOWN, () => {
-            this.isPaused = !this.isPaused
-            this.notify(PlayerEvent.VOTE_FOR_PAUSE, {player: this})
-        })
-    }
-
 
 }
