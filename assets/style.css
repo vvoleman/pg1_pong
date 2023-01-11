@@ -121,3 +121,9 @@ kbd {
     font-size: 20px;
     color: white;
 }
+.important{
+    border:2px solid #666;
+    border-radius: 3px;
+    padding:10px 20px;
+    background: #aaa;
+}

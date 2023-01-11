@@ -141,6 +141,9 @@ export default class NormalGameMode extends AbstractGameMode {
 
             SoundPlayer.getInstance().play(sound)
         })
+
+        this.toggleDebugMode();
+        this.toggleDebugMode();
     }
 
     private movePlayers(y: number): void {
