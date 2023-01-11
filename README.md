@@ -2,6 +2,9 @@
 
 - Předmět: `PG1`
 
+## Jak spustit?
+- Stačí spustit soubor `dist/index.html` v prohlížeči.
+
 ## Struktura
 
 - Pro vypracování semestrální jsem použil TypeScript - typování pomáhá při tvorbě projektu.
