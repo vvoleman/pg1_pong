@@ -33,7 +33,7 @@ computerGame?.addEventListener("click", () => {
 })
 
 automaticMode?.addEventListener("click", () => {
-    startNewGame(menu,result, new AutomaticGameMode(5, Difficulty.HARD, Difficulty.HARD))
+    startNewGame(menu,result, new AutomaticGameMode(10, Difficulty.HARD, Difficulty.HARD))
 })
 
 

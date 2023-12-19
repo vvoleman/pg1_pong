@@ -2,8 +2,9 @@ import Player from "@/game/Player";
 import IUpdatable from "@/objects/base/IUpdatable";
 import Sphere from "@/objects/Sphere";
 import BallMovementManager, {MovementEvent} from "@/managers/BallMovementManager";
-import {BoxGeometry} from "three";
+import {BoxGeometry, Clock} from "three";
 import PositionVector from "@/containers/PositionVector";
+import ClockManager from "@/managers/ClockManager";
 
 export enum Difficulty {
     EASY = 2,
@@ -20,6 +21,8 @@ export default class ComputerWrapper implements IUpdatable {
     private readonly _difficulty: Difficulty;
 
     private _requiredY: number | null = null;
+    private _lastMovedAt: number | null = null;
+    private _clock: Clock = ClockManager.getClock()
 
     constructor(player: Player, ball: Sphere, movement: BallMovementManager, difficulty: Difficulty = Difficulty.HARD) {
         this._movement = movement;
@@ -46,16 +49,17 @@ export default class ComputerWrapper implements IUpdatable {
     update(): void {
         if (!this.running) return
 
-        if (!this.isMyDirection()) {
-            this.moveToY(-this._ball.getPosition().y)
-            return
-        }
-
         if (!this.isMyDifficulty()) return
 
-        this._requiredY = this.getRequiredY()
+        if (this._requiredY !== null) {
+            this.moveToY(this._requiredY)
+        }
 
-        this.moveToY(this._requiredY)
+        const now = this._clock.getElapsedTime()
+        if (this._lastMovedAt !== null && now - this._lastMovedAt < 0.3) return
+
+        this._lastMovedAt = now
+        this._requiredY =  this.isMyDirection() ? this.getRequiredY() : -this._ball.getPosition().y
     }
 
     private isMyDirection(): boolean {

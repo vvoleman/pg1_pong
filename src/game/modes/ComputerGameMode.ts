@@ -38,5 +38,4 @@ export default class ComputerGameMode extends NormalGameMode {
        return controls
    }
 
-
 }

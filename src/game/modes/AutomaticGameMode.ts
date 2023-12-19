@@ -3,6 +3,8 @@ import IControlList, {setupControl} from "@/game/controls/IControl";
 import {Keys} from "@/game/controls/NormalGameControl";
 import game from "@/game/Game";
 import ComputerWrapper, {Difficulty} from "@/game/ComputerWrapper";
+import {Sides} from "@/game/Borders";
+import VelocityVector from "@/containers/VelocityVector";
 
 export default class AutomaticGameMode extends NormalGameMode {
 
@@ -32,6 +34,7 @@ export default class AutomaticGameMode extends NormalGameMode {
 
         this.computerLeft.setRunning(true);
         this.computerRight.setRunning(true);
+        this.game.getBall().setVelocity(new VelocityVector(0.5,-0.1))
     }
 
     getGameControls(): IControlList {
@@ -44,6 +47,16 @@ export default class AutomaticGameMode extends NormalGameMode {
         setupControl(controls[Keys.RIGHT_PLAYER_DOWN], () => {}, () => {});
 
         return controls
+    }
+
+    onBallBorderCollision(side: Sides) {
+        if (side === Sides.TOP || side === Sides.BOTTOM) {
+            return
+        }
+
+        const player = side === Sides.LEFT ? this.players[1] : this.players[0]
+
+        this.scorePoint(player)
     }
 
 
